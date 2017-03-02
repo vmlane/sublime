@@ -1,0 +1,58 @@
+%YAML 1.2
+---
+name: ROS Message
+file_extensions: [msg,srv]
+scope: source.rosmsg
+
+variables:
+  primitives: \b(bool|int8|uint8|int16|uint16|int32|uint32|int64|uint64|float32|float64|string|time|duration)\b
+  id: '(?:[\p{L}_$][\p{L}\p{N}_$]*)'
+
+contexts:
+  main:
+    - include: comment
+    - include: string
+    - include: code
+  
+  comment:
+    - match: "#"
+      scope: punctuation.definition.comment.rosmsg
+      push:
+        - meta_scope: comment.line.number-sign.rosmsg
+        - match: \n
+          pop: true
+  
+  string:
+    - match: \b(string)\b
+      scope: storage.type.rosmsg
+      push:
+        - meta_scope: meta.string.line.rosmsg
+        - match: =\s*(.*)
+          captures:
+            1: string.unquoted.rosmsg
+        - match: \n
+          pop: true
+
+  code:
+    - include: keywords
+    - include: types
+    - include: constants-and-special-vars 
+  
+  keywords:
+    - match: (=)
+      scope: keyword.operator.assignment.java
+      push:
+        - meta_scope: meta.assignment.rhs.java
+        - match: (?=\n)
+          pop: true
+        - include: code
+
+  types:
+    - match: '{{primitives}}'
+      scope: storage.type.rosmsg
+  
+  constants-and-special-vars:
+    - match: '\b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)([LlFfUuDd]|UL|ul)?\b'
+      scope: constant.numeric.rosmsg
+    # - match: '{{id}}'
+      # scope: constant.other.rosmsg
