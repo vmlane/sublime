@@ -1,6 +1,7 @@
 %YAML 1.2
 ---
 name: ROS Message
+# srv files are 2 messages with a --- separator
 file_extensions: [msg,srv]
 scope: source.rosmsg
 
@@ -11,6 +12,7 @@ variables:
 contexts:
   main:
     - include: comment
+    # for string constants, text after inline '#' isn't parsed as comment
     - include: string
     - include: code
   
@@ -23,10 +25,12 @@ contexts:
           pop: true
   
   string:
+    # Matches the string in 'string name = STRING'
     - match: \b(string)\b
       scope: storage.type.rosmsg
       push:
         - meta_scope: meta.string.line.rosmsg
+        # Matches the STRING in 'string name = STRING'
         - match: =\s*(.*)
           captures:
             1: string.unquoted.rosmsg
@@ -48,11 +52,17 @@ contexts:
         - include: code
 
   types:
+    # match ROS primitive types
     - match: '{{primitives}}'
       scope: storage.type.rosmsg
-  
+    # match package/Message or 'Header'
+    - match: '({{id}}/{{id}})|Header'
+      scope: support.class.rosmsg
+
   constants-and-special-vars:
+    # match numeric values
     - match: '\b((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)([LlFfUuDd]|UL|ul)?\b'
       scope: constant.numeric.rosmsg
+    # Match constant names (Sublime colors constant name the same as the value)
     # - match: '{{id}}'
       # scope: constant.other.rosmsg
